@@ -1,0 +1,51 @@
+/*
+http * Copyright (C), 2002-2021, 苏宁易购电子商务有限公司
+ * FileName: FileUploadParam.java
+ * Author:   19041969
+ * Date:     2021年6月9日 下午4:59:38
+ * Description: //模块目的、功能描述      
+ * History: //修改记录
+ * <author>      <time>      <version>    <desc>
+ * 修改人姓名             修改时间            版本号                  描述
+ */
+package com.nixian.http.client.param;
+
+import java.io.InputStream;
+
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
+
+/**
+ * 〈一句话功能简述〉<br> 
+ * 〈功能详细描述〉
+ *
+ * @author nixian
+ * @see [相关类/方法]（可选）
+ * @since [产品/模块版本] （可选）
+ */
+public class InputStreamUploadParam extends MultipartParam {
+    
+    InputStream input;
+
+    public static InputStreamUploadParam create(InputStream data){
+        return new InputStreamUploadParam(data);
+    }
+
+    public static InputStreamUploadParam create(String name,String mimeType,String charset,String fileName,InputStream data) {
+        return new InputStreamUploadParam(name, mimeType,charset,fileName,data);
+    }
+    
+    public InputStreamUploadParam(String name,String mimeType,String charset,String fileName,InputStream data) {
+        super(name, mimeType,charset,fileName);
+        this.input = data;
+    }
+    
+    public InputStreamUploadParam(InputStream data) {
+        this.input = data;
+    } 
+    
+    public ContentBody getContentBody() {
+        return new InputStreamBody((InputStream)input,mimeType,fileName);
+    }
+    
+}
