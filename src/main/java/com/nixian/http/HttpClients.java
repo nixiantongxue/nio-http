@@ -11,16 +11,26 @@
 package com.nixian.http;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.config.ConnectionConfig;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.impl.nio.NHttpConnectionBase;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
+import org.apache.http.nio.ContentDecoder;
+import org.apache.http.nio.ContentEncoder;
+import org.apache.http.nio.NHttpClientConnection;
 import org.apache.http.nio.conn.ManagedNHttpClientConnection;
 import org.apache.http.nio.conn.NHttpConnectionFactory;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
@@ -68,9 +78,8 @@ public class HttpClients {
         if (null == customerHttpClient) {
             synchronized (HttpClients.class) {
                 status.compareAndSet(Status.NULL, Status.INACTIVE);
-                ConnectionConfig defaultConfig = ConnectionConfig.custom()
-                        .setBufferSize(8192)
-                        .build();
+                ConnectionConfig defaultConfig = null; 
+                defaultConfig = ConnectionConfig.custom().setBufferSize(8192).build();
                 
 //                NHttpConnectionFactory<ManagedNHttpClientConnection> connFactory = new ManagedNHttpClientConnectionFactory() {
 //                      
@@ -154,6 +163,37 @@ public class HttpClients {
             }
         }
         
+        @Override
+        public Future<NHttpClientConnection> requestConnection(
+                final HttpRoute route,
+                final Object state,
+                final long connectTimeout,
+                final long leaseTimeout,
+                final TimeUnit tunit,
+                final FutureCallback<NHttpClientConnection> callback) {
+            return super.requestConnection(route, state, connectTimeout, leaseTimeout, tunit, 
+                    
+                    new FutureCallback<NHttpClientConnection>() {
+
+                        @Override
+                        public void completed(final NHttpClientConnection result) {
+//                             辅助提前释放decoder 
+                            result.resetOutput();
+                            callback.completed(result);
+                        }
+        
+                        @Override
+                        public void failed(final Exception ex) {
+                            callback.failed(ex);
+                        }
+        
+                        @Override
+                        public void cancelled() {
+                            callback.cancelled();
+                        }
+        
+                    });
+        }
         
         public void shutdown()  throws IOException {
             if (status.compareAndSet(Status.ACTIVE, Status.STOPPED)) {

@@ -109,6 +109,7 @@ public class NTargetTest {
         HttpGetHeadInfo info = new HttpGetHeadInfo();
         OSSObject object = new OSSObject();
         info.setObject(object);
+        info.setnConnectionLeakTest(this);
         
         Callback back,call;
         call = (back = Callback.create()).thencall(res->{return getHeadInfo((HttpResponse)res,info);});
@@ -153,6 +154,7 @@ public class NTargetTest {
         HttpGetHeadInfo info = new HttpGetHeadInfo();
         OSSObject object = new OSSObject();
         info.setObject(object);
+        info.setnConnectionLeakTest(this);
         
         Callback back,call;
         call = (back = Callback.create()).thencall(res->{return getHeadInfo((HttpResponse)res,info);});
@@ -176,7 +178,8 @@ public class NTargetTest {
         HttpGetHeadInfo info = new HttpGetHeadInfo();
         OSSObject object = new OSSObject();
         info.setObject(object);
-            
+        info.setnConnectionLeakTest(this);
+        
         Callback back,call;
         call = (back = Callback.create()).thencall(res->{return getHeadInfo((HttpResponse)res,info);});
         
@@ -244,6 +247,7 @@ public class NTargetTest {
         call = (back = Callback.create()).thencall(res->{return getHeadInfo((HttpResponse)res,info);});
         OSSObject object = new OSSObject();
         info.setObject(object);
+        info.setnConnectionLeakTest(this);
        
         CloseableHttpAsyncClient httpClient = HttpClients.getPoolClient(10000,10000,false);
         try {

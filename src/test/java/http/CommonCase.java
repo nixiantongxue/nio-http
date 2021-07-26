@@ -28,5 +28,5 @@ public class CommonCase {
                                         "C:\\Users\\19041969\\Desktop\\NIO TEST\\AB.jpeg"
                                        };
     
-    public static int testCount = 3;
+    public static int testCount = 1;
 }
