@@ -25,6 +25,14 @@ public abstract class Callback<T> implements FutureCallback<T>,Future{
         return new Call();
     }
     
+    public static com.nixian.core.concurrent.Call create(boolean mixMode) {
+        Call call = null;
+        if(mixMode) {
+            (call = new Call()).completed(null);
+        }
+        return call;
+    }
+    
     protected Callback next = null;
     protected Callback replaced = null;
     protected Executor executor = null;
