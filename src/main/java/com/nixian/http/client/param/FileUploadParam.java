@@ -13,9 +13,9 @@ package com.nixian.http.client.param;
 import java.io.File;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.util.TextUtils;
 
 /**
  * 〈一句话功能简述〉<br> 
@@ -49,7 +49,8 @@ public class FileUploadParam extends MultipartParam {
     }
     
     public ContentBody getContentBody() {
-        return new FileBody(this.file, getMimeType(), getCharset());
+        this.fileName = TextUtils.isBlank(this.fileName) ? file.getName() : this.fileName;
+        return new FileBody(this.file,this.fileName,getMimeType(), getCharset());
     }
     
 }
