@@ -109,12 +109,16 @@ public class Call extends Callback<HttpResponse>{
         {
             this.next.execute();
         }
+        
+        this.notifyGet();
     }
 
     public void failed(Exception e) {
         this.ex = e;
         if(this.retry!=null) 
             this.retry.retry(e,null);
+        
+        this.notifyGet();
     }
 
     public void cancelled() {
@@ -248,12 +252,16 @@ public class Call extends Callback<HttpResponse>{
                 return;
             
             completed = true;
+            
+            this.notifyGet();
         }
 
         @Override
         public void failed(Exception ex) {
             back.ex = ex;
             completed = true;
+            
+            this.notifyGet();
         }
 
         public void cancelled() {

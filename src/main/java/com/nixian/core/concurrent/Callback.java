@@ -58,7 +58,10 @@ public abstract class Callback<T> implements FutureCallback<T>,Future{
         return (T)result;
     }
     
-    
+    protected synchronized Callback notifyGet() {
+        this.notifyAll();
+        return this;
+    }
     /* (non-Javadoc)
      * @see java.util.concurrent.Future#cancel(boolean)
      */
