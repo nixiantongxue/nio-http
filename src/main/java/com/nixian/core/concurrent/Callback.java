@@ -50,10 +50,18 @@ public abstract class Callback<T> implements FutureCallback<T>,Future{
     abstract boolean execute();
     abstract protected T result() throws ExecutionException;
     
-    final T actualResult() throws ExecutionException{
+    final T actualResult() throws InterruptedException, ExecutionException{
         Object result = result();
         if(result instanceof Callback)
-            return (T)(((Callback)result).actualResult());
+            return (T)(((Callback)result).get());
+
+        return (T)result;
+    }
+    
+    final T actualResult(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException,TimeoutException{
+        Object result = result();
+        if(result instanceof Callback)
+            return (T)(((Callback)result).get(timeout,unit));
 
         return (T)result;
     }
@@ -108,7 +116,7 @@ public abstract class Callback<T> implements FutureCallback<T>,Future{
         final long startTime = (msecs <= 0) ? 0 : System.currentTimeMillis();
         long waitTime = msecs;
         if (this.completed) {
-            return actualResult();
+            return actualResult(timeout,unit);
         } else if (waitTime <= 0) {
             throw new TimeoutException();
         } else {
