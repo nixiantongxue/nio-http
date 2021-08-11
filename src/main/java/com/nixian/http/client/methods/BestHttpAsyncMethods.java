@@ -26,6 +26,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -61,7 +62,15 @@ import com.nixian.http.client.param.MultipartParam;
  */
 final public class BestHttpAsyncMethods{
     
-    public static HttpAsyncRequestProducer cerateDelete(HeaderParam headerParam) {
+    public static HttpAsyncRequestProducer createGet(HeaderParam headerParam) {
+        HttpGet httpGet = new HttpGet(headerParam.getUrl());
+        headerParam.header.forEach((key,value)->{
+            httpGet.setHeader((String)key, (String)value);
+        });
+        return BestRequestProducer.create(httpGet);
+    }
+    
+    public static HttpAsyncRequestProducer createDelete(HeaderParam headerParam) {
         HttpDelete httpDelete = new HttpDelete(headerParam.getUrl());
         headerParam.header.forEach((key,value)->{
             httpDelete.setHeader((String)key, (String)value);
@@ -166,6 +175,10 @@ final public class BestHttpAsyncMethods{
     
     public static HttpAsyncResponseConsumer createDownlaod(final File file) throws FileNotFoundException{
         return HttpAsyncMethods.createZeroCopyConsumer(file);
+    }
+    
+    public static HttpAsyncResponseConsumer createDownlaod(final String filePath) throws FileNotFoundException{
+        return createZeroCopyConsumer(filePath);
     }
     
     
@@ -313,7 +326,10 @@ final public class BestHttpAsyncMethods{
         return HttpAsyncMethods.createZeroCopyConsumer(file);
     }
     
-    
+    public static HttpAsyncResponseConsumer<HttpResponse> createZeroCopyConsumer(
+            final String filePath) throws FileNotFoundException {
+        return HttpAsyncMethods.createZeroCopyConsumer(new File(filePath));
+    }
     
 //    ===========================================================================================
     
@@ -378,7 +394,6 @@ final public class BestHttpAsyncMethods{
                 }
             } else {
                 this.producer = null;
-                throw new IllegalArgumentException("request 参数有误");
             }
         }
 
