@@ -112,7 +112,7 @@ public class Call extends Callback<HttpResponse>{
         
         this.notifyGet();
     }
-
+    
     public void failed(Exception e) {
         this.ex = e;
         if(this.retry!=null) 

@@ -33,6 +33,12 @@ public abstract class Callback<T> implements FutureCallback<T>,Future{
         return call;
     }
     
+    public static com.nixian.core.concurrent.Call create(Exception e) {
+        Call call = null;
+        (call = new Call()).failed(e);
+        return call;
+    }
+    
     protected Callback next = null;
     protected Callback replaced = null;
     protected Executor executor = null;
