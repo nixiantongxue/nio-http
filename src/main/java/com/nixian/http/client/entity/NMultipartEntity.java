@@ -145,7 +145,7 @@ public class NMultipartEntity implements ProducingNHttpEntity,HttpAsyncContentPr
     }
 
     public void addPart(final String name, final ContentBody contentBody) {
-        addPart(new FormBodyPart(name, contentBody));
+        addPart(new com.nixian.http.client.mime.FormBodyPart(name, contentBody));
     }
 
     public boolean isRepeatable() {

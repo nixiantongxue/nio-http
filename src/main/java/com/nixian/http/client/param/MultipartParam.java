@@ -15,6 +15,8 @@ import java.io.InputStream;
 
 import org.apache.http.entity.mime.content.ContentBody;
 
+import com.nixian.http.client.mime.Mimes;
+
 /**
  * 〈一句话功能简述〉<br> 
  * 〈功能详细描述〉
@@ -59,7 +61,7 @@ abstract public class MultipartParam {
      * @return the mimeType
      */
     public String getMimeType() {
-        return mimeType;
+        return Mimes.put(mimeType);
     }
     /**
      * @param mimeType the mimeType to set
