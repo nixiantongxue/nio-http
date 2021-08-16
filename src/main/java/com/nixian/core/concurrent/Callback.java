@@ -25,11 +25,9 @@ public abstract class Callback<T> implements FutureCallback<T>,Future{
         return new Call();
     }
     
-    public static com.nixian.core.concurrent.Call create(boolean mixMode) {
+    public static com.nixian.core.concurrent.Call create(boolean optimize) {
         Call call = null;
-        if(mixMode) {
-            (call = new Call()).completed(null);
-        }
+        (call = new Call(false)).completed(null);
         return call;
     }
     
@@ -39,10 +37,11 @@ public abstract class Callback<T> implements FutureCallback<T>,Future{
         return call;
     }
     
+    protected boolean threadOptimize = true;
     protected Callback next = null;
     protected Callback replaced = null;
     protected Executor executor = null;
-    protected short status = 0;
+    protected volatile int status = 0;
     protected volatile boolean completed = false;
 
     abstract public void completed(T result);
@@ -160,7 +159,7 @@ public abstract class Callback<T> implements FutureCallback<T>,Future{
     }
     
     protected final boolean tryRuning() {
-        return UNSAFE.compareAndSwapInt(this, STATUS, status,1);
+        return UNSAFE.compareAndSwapInt(this, STATUS, 0,1);
     }
     
     protected final boolean reRunable() {

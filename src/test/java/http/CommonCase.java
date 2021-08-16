@@ -28,5 +28,7 @@ public class CommonCase {
                                         "C:\\Users\\19041969\\Desktop\\NIO TEST\\AB.jpeg"
                                        };
     
+    public static String localPath = "C://Users//19041969//Desktop//NIO TEST//s//TMP.txt";
+    
     public static int testCount = 1;
 }

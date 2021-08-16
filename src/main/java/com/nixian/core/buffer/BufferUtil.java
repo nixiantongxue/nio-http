@@ -10,6 +10,10 @@
  */
 package com.nixian.core.buffer;
 
+import java.io.IOException;
+
+import com.nixian.core.buffer.CachedBufferPool.Cached;
+
 /**
  * 〈一句话功能简述〉<br> 
  * 〈功能详细描述〉
@@ -20,6 +24,24 @@ package com.nixian.core.buffer;
  */
 public class BufferUtil {
     
+    final static int CareCheck = 0;
+    final static int OpenCheck = 1;
     
+    public static Cached checkBuffer(Cached buffer,int checkMode) throws IOException {
+        if(buffer==null) {
+            if(checkMode > CareCheck)
+                return (buffer = CachedBufferPool.allocate());
+            throw new BufferBeNullException();
+        }
+        return buffer;
+    }
     
+    public static class BufferBeNullException extends IOException{
+        
+        final static String error = "BufferUtil.BufferBeNullException: 所操作的Buffer 可能已经回收";
+        
+        BufferBeNullException(){
+            super(error);
+        }
+    }
 }

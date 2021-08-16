@@ -33,6 +33,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
+import com.nixian.core.concurrent.Call;
 import com.nixian.core.concurrent.Callback;
 import com.nixian.http.HttpClients;
 import com.nixian.http.client.methods.BestHttpAsyncMethods;
@@ -65,9 +66,13 @@ public class NTargetTest {
             //start
             
             HttpGetHeadInfo infoMulList = null;
-            for(int i=0;i<CommonCase.testCount;i++) {
-                infoMulList = test.uploadOne(CommonCase.testUrl,null);
-            }
+//            for(int i=0;i<CommonCase.testCount;i++) {
+//                infoMulList = test.uploadOne(CommonCase.testUrl,null);
+//            }
+            
+            downloadFile(CommonCase.testUrl,CommonCase.localPath,null)
+            .get();
+            
             
 //            HttpGetHeadInfo infoOne = test.uploadOne(testUrl, null);
             
@@ -269,7 +274,28 @@ public class NTargetTest {
         return info;
     }
    
-   
+   public static Callback<HttpResponse> downloadFile(String url,String localPath,Map<String,String>map)
+   {
+       CloseableHttpAsyncClient httpClient = HttpClients.getPoolClient(10000,10000,false);       
+       
+       Callback back,call;
+       
+       call = (back = Callback.create()).thencall(res->{
+               return res;
+           }
+       );
+       try {
+       
+           httpClient.execute(
+               BestHttpAsyncMethods.createGet(HeaderParam.create(url).setCharset("utf-8")),
+               BestHttpAsyncMethods.createDownlaod(localPath),
+               back);
+       }catch(Exception e){
+           e.printStackTrace();
+           call = back.thencall(res->{return null;});
+       }
+       return call;
+   }
     
     
     

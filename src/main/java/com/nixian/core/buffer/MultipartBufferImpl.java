@@ -14,8 +14,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
+import org.apache.http.nio.ContentDecoder;
 import org.apache.http.nio.ContentEncoder;
 import org.apache.http.nio.util.ByteBufferAllocator;
+import org.apache.http.nio.util.ContentInputBuffer;
 import org.apache.http.nio.util.ExpandableBuffer;
 import org.apache.http.util.Args;
 
@@ -27,9 +29,9 @@ import org.apache.http.util.Args;
  * @see [相关类/方法]（可选）
  * @since [产品/模块版本] （可选）
  */
-public class MultipartBufferImpl extends ExpandableBuffer implements MultipartBuffer{
+public class MultipartBufferImpl extends ExpandableBuffer implements MultipartBuffer,ContentInputBuffer{
     
-    
+    private boolean endOfStream = false;
     /**
      * @param buffersize
      * @param allocator
@@ -38,6 +40,86 @@ public class MultipartBufferImpl extends ExpandableBuffer implements MultipartBu
         super(buffersize, allocator);
     }
 
+    
+    @Override
+    public void reset() {
+        this.endOfStream = false;
+        super.clear();
+    }
+
+    @Override
+    public int consumeContent(final ContentDecoder decoder) throws IOException {
+        setInputMode();
+        int totalRead = 0;
+        int bytesRead;
+        while ((bytesRead = decoder.read(this.buffer)) != -1) {
+            if (bytesRead == 0) {
+                if (!this.buffer.hasRemaining()) {
+                    expand();
+                } else {
+                    break;
+                }
+            } else {
+                totalRead += bytesRead;
+            }
+        }
+        if (bytesRead == -1 || decoder.isCompleted()) {
+            this.endOfStream = true;
+        }
+        return totalRead;
+    }
+
+    public boolean isEndOfStream() {
+        return !hasData() && this.endOfStream;
+    }
+
+    @Override
+    public int read() throws IOException {
+        if (isEndOfStream()) {
+            return -1;
+        }
+        setOutputMode();
+        return this.buffer.get() & 0xff;
+    }
+
+    @Override
+    public int read(final byte[] b, final int off, final int len) throws IOException {
+        if (isEndOfStream()) {
+            return -1;
+        }
+        if (b == null) {
+            return 0;
+        }
+        setOutputMode();
+        int chunk = len;
+        if (chunk > this.buffer.remaining()) {
+            chunk = this.buffer.remaining();
+        }
+        this.buffer.get(b, off, chunk);
+        return chunk;
+    }
+
+    public int read(final byte[] b) throws IOException {
+        if (isEndOfStream()) {
+            return -1;
+        }
+        if (b == null) {
+            return 0;
+        }
+        return read(b, 0, b.length);
+    }
+
+    public void shutdown() {
+        this.endOfStream = true;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
     public void write(final ByteBuffer src) {
         if (src == null) {
             return;

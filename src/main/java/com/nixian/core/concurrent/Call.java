@@ -38,6 +38,10 @@ public class Call extends Callback<HttpResponse>{
     Call(){
     }
     
+    Call(boolean optimize){
+        threadOptimize = optimize;
+    }
+    
     public <T,R> Callback retry(BiFunction<? super Exception,? super HttpResponse,Boolean> fn,int retryTime) {
         if(null==retry)
             this.retry = new Retry(fn,retryTime,this);
@@ -50,6 +54,7 @@ public class Call extends Callback<HttpResponse>{
         synchronized (this) {
             tail = call = new CommonCallback<R,HttpResponse>(this,tail,this,fn);
             call.src.next = call;
+            call.threadOptimize = true;
         }
         call.execute();
         
@@ -64,6 +69,7 @@ public class Call extends Callback<HttpResponse>{
         synchronized (this) {
             tail = call = new CommonCallback<R,HttpResponse>(this,tail,this,fn);
             call.src.next = call;
+            call.threadOptimize = false;
             call.executor = stpe;
         }
         
@@ -184,6 +190,7 @@ public class Call extends Callback<HttpResponse>{
             CommonCallback<V,R> call = null;
             synchronized (this.back) {
                 this.back.tail = call = new CommonCallback<V,R>(this,this.back.tail,this.back,fn);
+                call.threadOptimize = true;
                 call.src.next = call;
             }
             call.execute();
@@ -199,6 +206,7 @@ public class Call extends Callback<HttpResponse>{
             
             synchronized (this.back) {
                 this.back.tail = call = new CommonCallback<V,R>(this,this.back.tail,this.back,fn);
+                call.threadOptimize = false;
                 call.src.next = call;
             }
             
@@ -221,18 +229,22 @@ public class Call extends Callback<HttpResponse>{
                         throw (Exception)(nxt.back.result());
                     }
                     
-                    if(nxt.src!=null && nxt.src.completed || nxt.src==null ) {
-                        if(nxt.completed) continue;
-                        nxt.completed(null);
-                    }else{
-                        return true;
+                    if(nxt.threadOptimize) {
+                        if(nxt.src!=null && nxt.src.completed || nxt.src==null ) {
+                            if(nxt.completed) continue;
+                            nxt.completed(null);
+                        }else{
+                            return false;
+                        }
+                        
+                        if(nxt.next==null || nxt.back==null) return true;
                     }
                     
-                    if(nxt.next==null || nxt.back==null) return true;
-                    
-                    if(nxt.back.executor==nxt.executor && !nxt.execute()) {
+                    if(nxt.back.executor==nxt.executor) {
+                        nxt.threadOptimize = true;
                         this.executor.execute(nxt);
                     }
+                    
                 } catch (Exception e) {
                     logger.severe(e.toString());
                     failed(e);
@@ -247,12 +259,11 @@ public class Call extends Callback<HttpResponse>{
         @Override
         public  void completed(R result){
             
-            if(tryRuning())  try { this.result = this.fn.apply(this.dep==null?null:this.dep.result());} catch (ExecutionException e) {logger.severe(e.toString());}
+            if(tryRuning())  try {this.result = this.fn.apply(this.dep==null?null:this.dep.result());}catch (ExecutionException e) {logger.severe(e.toString());}finally {reRunable();}
             else
                 return;
             
             completed = true;
-            
             this.notifyGet();
         }
 

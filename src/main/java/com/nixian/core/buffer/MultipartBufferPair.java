@@ -31,11 +31,8 @@ public class MultipartBufferPair {
 
     private Cached buffer1 = CachedBufferPool.allocate();
     private Cached buffer2 = CachedBufferPool.allocate();
-    
-    private final static int CareCheck = 0;
-    private final static int OpenCheck = 1;
-    
-    private int checkMode = OpenCheck;
+
+    private final int checkMode = BufferUtil.OpenCheck;
 //    private Cached buffer3 = CachedBufferPool.allocate(4096);
 //    private Cached buffer4 = CachedBufferPool.allocate(4096);
 
@@ -43,14 +40,6 @@ public class MultipartBufferPair {
         return new MultipartBufferPair().new MultipartBufferComposite();
     }
     
-    private Cached checkBuffer(Cached buffer) throws IOException {
-        if(buffer==null) {
-            if(checkMode > CareCheck)
-                return (buffer = CachedBufferPool.allocate());
-            throw new BufferBeNullException();
-        }
-        return buffer;
-    }
     
     private void checkPair(MultipartBufferPair pair) throws IOException  {
         if(null==pair)
@@ -58,18 +47,18 @@ public class MultipartBufferPair {
     }
     
     public void writeHead(ByteBuffer b) throws IOException {
-        buffer1 = checkBuffer(buffer1);
+        buffer1 = BufferUtil.checkBuffer(buffer1,this.checkMode);
         ((MultipartBuffer)buffer1.getCached()).write(b);
     }
     
     public void writeFoot(ByteBuffer b) throws IOException  {
-        buffer2 = checkBuffer(buffer2);
+        buffer2 = BufferUtil.checkBuffer(buffer2,this.checkMode);
         ((MultipartBuffer)buffer2.getCached()).write(b);
     }
     
     public int flushHead(ContentEncoder encoder) throws IOException {
         int fh = 0;
-        buffer1 = checkBuffer(buffer1);
+        buffer1 = BufferUtil.checkBuffer(buffer1,this.checkMode);
         try {
             fh = ((MultipartBuffer)buffer1.getCached()).flush(encoder);
         }finally{
@@ -82,7 +71,7 @@ public class MultipartBufferPair {
     
     public int flushFoot(ContentEncoder encoder) throws IOException {
         int ff = 0;
-        buffer2 = checkBuffer(buffer2);
+        buffer2 = BufferUtil.checkBuffer(buffer2,this.checkMode);
         try {
             ff = ((MultipartBuffer)buffer2.getCached()).flush(encoder);
         }finally{
@@ -115,15 +104,6 @@ public class MultipartBufferPair {
     protected long getLength() {
         return ((MultipartBufferImpl)buffer1.getCached()).length()+
                 ((MultipartBufferImpl)buffer2.getCached()).length();
-    }
-    
-    public static class BufferBeNullException extends IOException{
-        
-        final static String error = "MultipartBufferPair.BufferBeNullException: 所操作的Buffer 可能已经回收";
-        
-        BufferBeNullException(){
-            super(error);
-        }
     }
     
     public static class BufferPairBeNullException extends IOException{
@@ -245,7 +225,7 @@ public class MultipartBufferPair {
             int fe = 0;
             try {
                 if(common ==null)
-                    throw new BufferBeNullException();
+                    throw new BufferUtil.BufferBeNullException();
                 fe = ((MultipartBuffer)common.getCached()).flush(encoder);
             }finally{
                 CachedBufferPool.freeCached(common);

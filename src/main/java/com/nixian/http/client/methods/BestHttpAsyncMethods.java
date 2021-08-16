@@ -14,12 +14,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
@@ -32,21 +35,28 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MIME;
 import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.nio.ContentDecoder;
+import org.apache.http.nio.ContentDecoderChannel;
 import org.apache.http.nio.ContentEncoder;
+import org.apache.http.nio.FileContentDecoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.client.methods.HttpAsyncMethods;
 import org.apache.http.nio.entity.EntityAsyncContentProducer;
 import org.apache.http.nio.entity.HttpAsyncContentProducer;
+import org.apache.http.nio.protocol.AbstractAsyncResponseConsumer;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.nio.protocol.HttpAsyncResponseConsumer;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.Args;
+import org.apache.http.util.Asserts;
 
 import com.nixian.http.client.codecs.BestEncoder;
 import com.nixian.http.client.codecs.EncoderWrapperFactory;
+import com.nixian.http.client.entity.ContentCachedEntity;
 import com.nixian.http.client.entity.NHttpEntity;
 import com.nixian.http.client.entity.NMultipartEntity;
 import com.nixian.http.client.param.HeaderParam;
@@ -174,11 +184,11 @@ final public class BestHttpAsyncMethods{
     }
     
     public static HttpAsyncResponseConsumer createDownlaod(final File file) throws FileNotFoundException{
-        return HttpAsyncMethods.createZeroCopyConsumer(file);
+        return createBestDownloadConsumer(file);
     }
     
     public static HttpAsyncResponseConsumer createDownlaod(final String filePath) throws FileNotFoundException{
-        return createZeroCopyConsumer(filePath);
+        return createBestDownloadConsumer(new File(filePath));
     }
     
     
@@ -321,17 +331,145 @@ final public class BestHttpAsyncMethods{
         return HttpAsyncMethods.createConsumer();
     }
 
-    public static HttpAsyncResponseConsumer<HttpResponse> createZeroCopyConsumer(
+    public static HttpAsyncResponseConsumer<HttpResponse> createBestDownloadConsumer(
             final File file) throws FileNotFoundException {
-        return HttpAsyncMethods.createZeroCopyConsumer(file);
+        return new BestHttpAsyncMethods.BestDownloadConsumer<HttpResponse>(file) {
+
+            @Override
+            protected HttpResponse process(
+                    final HttpResponse response,
+                    final File file,
+                    final ContentType contentType) {
+                return response;
+            }
+
+        };
+    }
+//  ===========================================================================================
+    
+    public static abstract class BestDownloadConsumer<T> extends AbstractAsyncResponseConsumer<T> {
+
+        private final File file;
+        private final File dir;
+        private final RandomAccessFile accessfile;
+        private int exist = 4;
+
+        private HttpResponse response;
+        private boolean contentCached = false;
+        private ContentCachedEntity contentCachedEntity;
+        private ContentType contentType;
+        private Header contentEncoding;
+        private FileChannel fileChannel;
+        private long idx = -1;
+
+        public BestDownloadConsumer(final File file) throws FileNotFoundException {
+            super();
+            if (file == null) {
+                throw new IllegalArgumentException("File may nor be null");
+            }
+            this.file = file;
+            
+            if(!this.file.exists())
+            {
+                exist -= 1;
+            }
+            
+            dir = file.getParentFile();  
+            if(!dir.exists()){  
+                dir.mkdirs(); 
+                exist -= 2;
+            }
+            
+            this.accessfile = new RandomAccessFile(this.file, "rw");
+            
+        }
+
+        @Override
+        protected void onResponseReceived(final HttpResponse response) {
+            this.response = response;
+            if(this.response.getStatusLine().getStatusCode()<200 ||this.response.getStatusLine().getStatusCode()>300)
+            {
+                contentCached = true;
+            }
+        }
+
+        @Override
+        protected void onEntityEnclosed(
+                final HttpEntity entity, final ContentType contentType) throws IOException {
+            if(contentCached) {
+                contentCachedEntity = new ContentCachedEntity(entity);
+                this.response.setEntity(contentCachedEntity);
+                return;
+            }
+            this.contentType = contentType;
+            this.contentEncoding = entity.getContentEncoding();
+            this.fileChannel = this.accessfile.getChannel();
+            this.idx = 0;
+        }
+
+        @Override
+        protected void onContentReceived(
+                final ContentDecoder decoder, final IOControl ioctrl) throws IOException {
+            
+            if(contentCached) {
+                contentCachedEntity.consumeContent(decoder);
+                return;
+            }
+            
+            Asserts.notNull(this.fileChannel, "File channel");
+            final long transferred;
+            if (decoder instanceof FileContentDecoder) {
+                transferred = ((FileContentDecoder)decoder).transfer(
+                        this.fileChannel, this.idx, Integer.MAX_VALUE);
+            } else {
+                transferred = this.fileChannel.transferFrom(
+                        new ContentDecoderChannel(decoder), this.idx, Integer.MAX_VALUE);
+            }
+            if (transferred > 0) {
+                this.idx += transferred;
+            }
+            if (decoder.isCompleted()) {
+                this.fileChannel.close();
+            }
+        }
+
+        protected abstract T process(
+                HttpResponse response, File file, ContentType contentType) throws Exception;
+
+        @Override
+        protected T buildResult(final HttpContext context) throws Exception {
+            if(contentCached) {
+                return (T)this.response;
+            }
+            
+            final FileEntity entity = new FileEntity(this.file, this.contentType);
+            entity.setContentEncoding(this.contentEncoding);
+            this.response.setEntity(entity);
+            return process(this.response, this.file, this.contentType);
+        }
+
+        @Override
+        protected void releaseResources() {
+            try {
+                if(idx<0) {
+                    if(exist <= 1) {
+                        this.file.delete();
+                    }
+                    
+                    if(exist < 3) {
+                        this.dir.delete();
+                    }
+                }
+                
+                this.accessfile.close();
+            } catch (final IOException ignore) {
+            }
+        }
+
     }
     
-    public static HttpAsyncResponseConsumer<HttpResponse> createZeroCopyConsumer(
-            final String filePath) throws FileNotFoundException {
-        return HttpAsyncMethods.createZeroCopyConsumer(new File(filePath));
-    }
     
-//    ===========================================================================================
+    
     
     
     

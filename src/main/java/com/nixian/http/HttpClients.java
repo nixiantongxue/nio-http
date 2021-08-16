@@ -68,8 +68,7 @@ public class HttpClients {
             }
         }else if(status.get()==Status.ACTIVE)
             return customerHttpClient;
-       
-        throw new IllegalStateException("可能尚未创建HTTP-CLIENT,优先调用方法getPoolClient(int timeout, long idleTime, boolean tcpNoDelay)");
+               throw new IllegalStateException("可能尚未创建HTTP-CLIENT,优先调用方法getPoolClient(int timeout, long idleTime, boolean tcpNoDelay)");
     }
     
     public static CloseableHttpAsyncClient getPoolClient(int timeout, long idleTime, boolean tcpNoDelay)
