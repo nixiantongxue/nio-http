@@ -4,7 +4,7 @@
 
   <groupId>com.nixian</groupId>
   <artifactId>nio-http</artifactId>
-  <version>0.1.10-beta</version>
+  <version>0.1.11-beta</version>
   <packaging>jar</packaging>
 
   <name>nio-http</name>
