@@ -240,9 +240,9 @@ public class Call extends Callback<HttpResponse>{
                         if(nxt.next==null || nxt.back==null) return true;
                     }
                     
-                    if(nxt.back.executor==nxt.executor) {
+                    if(null!=nxt.executor) {
                         nxt.threadOptimize = true;
-                        this.executor.execute(nxt);
+                        nxt.executor.execute(nxt);
                     }
                     
                 } catch (Exception e) {
