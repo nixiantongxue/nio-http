@@ -33,7 +33,6 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
-import com.nixian.core.concurrent.Call;
 import com.nixian.core.concurrent.Callback;
 import com.nixian.http.HttpClients;
 import com.nixian.http.client.methods.BestHttpAsyncMethods;

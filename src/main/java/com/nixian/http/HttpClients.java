@@ -76,57 +76,58 @@ public class HttpClients {
         
         if (null == customerHttpClient) {
             synchronized (HttpClients.class) {
-                status.compareAndSet(Status.NULL, Status.INACTIVE);
-                ConnectionConfig defaultConfig = null; 
-                defaultConfig = ConnectionConfig.custom().setBufferSize(8192).build();
-                
-//                NHttpConnectionFactory<ManagedNHttpClientConnection> connFactory = new ManagedNHttpClientConnectionFactory() {
-//                      
-//                      private ConnectionConfig defaultConfig0 = defaultConfig;
-//                      
-//                      @Override
-//                      public ManagedNHttpClientConnection create(
-//                              final IOSession iosession, final ConnectionConfig config) {
-//                          return super.create(iosession, defaultConfig0);
-//                      }
-//                };
-
-                RequestConfig requestConfig = RequestConfig.custom()
-                       .setConnectTimeout(500000)
-                       .setSocketTimeout(500000)
-                       .setConnectionRequestTimeout(1000)
-                       .setStaleConnectionCheckEnabled(true)
-                       .build();
-    
-                    //配置io线程
-                IOReactorConfig ioReactorConfig = IOReactorConfig.custom().
-                        setIoThreadCount(Runtime.getRuntime().availableProcessors()*4)
-                        .setSoKeepAlive(true)
-                        .setSelectInterval(5000)
-                        .setTcpNoDelay(tcpNoDelay)
-                        .build();
-                
-                //设置连接池大小
-                ConnectingIOReactor ioReactor=null;
-                try {
-                    ioReactor = new DefaultConnectingIOReactor(ioReactorConfig);
-                } catch (IOReactorException e) {
-                    e.printStackTrace();
-                }
+                if(status.compareAndSet(Status.NULL, Status.INACTIVE)) {
+                    ConnectionConfig defaultConfig = null; 
+                    defaultConfig = ConnectionConfig.custom().setBufferSize(8192).build();
                     
-                PoolingNHttpClientConnectionManager connManager = new NiPoolingNHttpClientConnectionManager(ioReactor,idleTime);
-                connManager.setMaxTotal(100);
-                connManager.setDefaultMaxPerRoute(100);
+    //                NHttpConnectionFactory<ManagedNHttpClientConnection> connFactory = new ManagedNHttpClientConnectionFactory() {
+    //                      
+    //                      private ConnectionConfig defaultConfig0 = defaultConfig;
+    //                      
+    //                      @Override
+    //                      public ManagedNHttpClientConnection create(
+    //                              final IOSession iosession, final ConnectionConfig config) {
+    //                          return super.create(iosession, defaultConfig0);
+    //                      }
+    //                };
     
-                final CloseableHttpAsyncClient client = HttpAsyncClients.custom()
-                        .setConnectionManager(connManager)
-                        .setDefaultRequestConfig(requestConfig)
-                        .setDefaultConnectionConfig(defaultConfig)
-                        .build();
-    
-                client.start();
-                customerHttpClient = client;
-                status.compareAndSet(Status.INACTIVE, Status.ACTIVE);
+                    RequestConfig requestConfig = RequestConfig.custom()
+                           .setConnectTimeout(500000)
+                           .setSocketTimeout(500000)
+                           .setConnectionRequestTimeout(1000)
+                           .setStaleConnectionCheckEnabled(true)
+                           .build();
+        
+                        //配置io线程
+                    IOReactorConfig ioReactorConfig = IOReactorConfig.custom().
+                            setIoThreadCount(Runtime.getRuntime().availableProcessors()*4)
+                            .setSoKeepAlive(true)
+                            .setSelectInterval(5000)
+                            .setTcpNoDelay(tcpNoDelay)
+                            .build();
+                    
+                    //设置连接池大小
+                    ConnectingIOReactor ioReactor=null;
+                    try {
+                        ioReactor = new DefaultConnectingIOReactor(ioReactorConfig);
+                    } catch (IOReactorException e) {
+                        e.printStackTrace();
+                    }
+                        
+                    PoolingNHttpClientConnectionManager connManager = new NiPoolingNHttpClientConnectionManager(ioReactor,idleTime);
+                    connManager.setMaxTotal(100);
+                    connManager.setDefaultMaxPerRoute(100);
+        
+                    final CloseableHttpAsyncClient client = HttpAsyncClients.custom()
+                            .setConnectionManager(connManager)
+                            .setDefaultRequestConfig(requestConfig)
+                            .setDefaultConnectionConfig(defaultConfig)
+                            .build();
+        
+                    client.start();
+                    customerHttpClient = client;
+                    status.compareAndSet(Status.INACTIVE, Status.ACTIVE);
+                }
             }
         }
         
