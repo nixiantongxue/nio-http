@@ -46,7 +46,7 @@ public class ByteUploadParam extends MultipartParam {
     }
     
     public ContentBody getContentBody() {
-        return new ByteArrayBody((byte[])data,fileName,mimeType);
+        return new ByteArrayBody((byte[])data,mimeType,fileName);
     }
     
 
