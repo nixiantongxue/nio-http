@@ -19,7 +19,6 @@ public class ContentCachedEntity extends BasicHttpEntity {
      * Creates new instance of ContentBufferEntity.
      *
      * @param entity the original entity.
-     * @param buffer the content buffer.
      * @throws IOException 
      */
     public ContentCachedEntity(final HttpEntity entity) throws IOException {

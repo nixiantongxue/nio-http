@@ -1,8 +1,8 @@
 package http;
 /*
- * Copyright (C), 2002-2020, 苏宁易购电子商务有限公司
+ * Copyright (C), 2002-2020, nixian,email nixiantongxue@163.com
  * FileName: ConnectionLeakTest.java
- * Author:   19041969
+ * Author:   nixian
  * Date:     2020年12月15日 下午4:36:59
  * Description: //模块目的、功能描述      
  * History: //修改记录
@@ -54,8 +54,7 @@ import com.nixian.http.client.methods.BestHttpAsyncMethods;
  * 〈一句话功能简述〉<br> 
  * 〈功能详细描述〉
  *
- * @author 19041969
- * @see [相关类/方法]（可选）
+ * @author nixian
  * @since [产品/模块版本] （可选）
  */
 public class TargetTest {

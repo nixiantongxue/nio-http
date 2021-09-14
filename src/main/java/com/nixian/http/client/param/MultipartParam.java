@@ -1,7 +1,7 @@
 /*
-http * Copyright (C), 2002-2021, 苏宁易购电子商务有限公司
+http * Copyright (C), 2002-2021, nixian,email nixiantongxue@163.com
  * FileName: Upload.java
- * Author:   19041969
+ * Author:   nixian
  * Date:     2021年6月1日 下午8:16:38
  * Description: //模块目的、功能描述      
  * History: //修改记录
@@ -22,7 +22,6 @@ import com.nixian.http.client.mime.Mimes;
  * 〈功能详细描述〉
  *
  * @author nixian
- * @see [相关类/方法]（可选）
  * @since [产品/模块版本] （可选）
  */
 abstract public class MultipartParam {

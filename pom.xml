@@ -8,9 +8,38 @@
   <packaging>jar</packaging>
 
   <name>nio-http</name>
-  <url>http://maven.apache.org</url>
+  <url>https://github.com/nixiantongxue/nio-http</url>
+
+  <scm>
+      <url>https://github.com/nixiantongxue/nio-http</url>
+      <connection>scm:git:https://git@github.com/nixiantongxue/nio-http.git</connection>
+  </scm>
+
+  <organization>
+      <name>nixian</name>
+      <url>https://github.com/nixiantongxue</url>
+  </organization>
+
+  <developers>
+      <developer>
+          <id>nixian</id>
+          <name>nixian</name>
+          <email>nixiantongxue@163.com</email>
+      </developer>
+  </developers>
+
+  <licenses>
+      <license>
+          <name>Apache 2</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          <distribution>repo</distribution>
+          <comments>A business-friendly OSS license</comments>
+      </license>
+  </licenses>
 
   <properties>
+  	<gpg.skip>false</gpg.skip>
+    <javadoc.skip>false</javadoc.skip>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -49,31 +78,98 @@
     </dependency>
   </dependencies>
   
-  <distributionManagement>
-       <repository>
-           <id>releases</id>
-           <name>Suning Release Repository</name>
-           <url>http://maven.cnsuning.com/content/repositories/releases/</url>
-       </repository>
-       <snapshotRepository>
-           <id>snapshots</id>
-           <name>Suning Snapshot Repository</name>
-           <url>http://maven.cnsuning.com/content/repositories/snapshots/</url>
-       </snapshotRepository>
-   </distributionManagement>
-   
    <build>
 		<plugins>
+		
+			 <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-jar-plugin</artifactId>
+		        <version>3.0.0</version>
+		        <configuration>
+		          <archive>
+		            <index>true</index>
+		            <manifestEntries>
+		              <Built-By>nixian,nixiantongxue@163.com</Built-By>
+		            </manifestEntries>
+		          </archive>
+		        </configuration>
+		    </plugin>
+      
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>3.8.0</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
+			
+			
+			<!-- 
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <attach>true</attach>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadoc</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>${javadoc.skip}</skip>
+                    <show>public</show>
+                    <charset>UTF-8</charset>
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <configuration>
+                    <skip>${gpg.skip}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+			-->
 		</plugins>
 	</build>
 	

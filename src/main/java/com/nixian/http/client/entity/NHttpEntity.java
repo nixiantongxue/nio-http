@@ -113,7 +113,7 @@ public class NHttpEntity extends com.nixian.http.client.entity.HttpEntityWrapper
         
         if(!(super.getEntity() instanceof ProducingNHttpEntity) ||
                 this.channel instanceof FileChannel && !isWindowsFile()) {
-            produceContent_backup(encoder,ioctrl);
+            produceContentBackup(encoder,ioctrl);
         }else {
             ((ProducingNHttpEntity)super.getEntity()).produceContent(encoder, ioctrl);
         }
@@ -131,7 +131,7 @@ public class NHttpEntity extends com.nixian.http.client.entity.HttpEntityWrapper
      * 
      * D. 7       
      */
-    public void produceContent_backup(final ContentEncoder encoder,final IOControl ioctrl) throws IOException {
+    public void produceContentBackup(final ContentEncoder encoder,final IOControl ioctrl) throws IOException {
         Cached cd = null;
         try {
             ByteBuffer buffer =   (ByteBuffer)(cd= CachedBufferPool.allocate(TRANSFER_SIZE,BufferType.NATIVE)).getCached();

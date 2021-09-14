@@ -1,7 +1,7 @@
 /*
- * Copyright (C), 2002-2021, 苏宁易购电子商务有限公司
+ * Copyright (C), 2002-2021, nixian,email nixiantongxue@163.com
  * FileName: BufferPool.java
- * Author:   19041969
+ * Author:   nixian
  * Date:     2021年1月14日 下午12:30:32
  * Description: //模块目的、功能描述      
  * History: //修改记录
@@ -27,7 +27,6 @@ import sun.nio.ch.DirectBuffer;
  * 〈功能详细描述〉
  *
  * @author nixian
- * @see [相关类/方法]（可选）
  * @since [产品/模块版本] （可选）
  */
 public abstract class CachedBufferPool {
