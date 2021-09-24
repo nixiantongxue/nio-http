@@ -1,6 +1,6 @@
 /*
  * Copyright (C), 2002-2020, nixian,email nixiantongxue@163.com
- * FileName: CustomerHttpClient.java
+ * FileName: bestHttpClient.java
  * Author:   nixian
  * Date:     2020年12月29日 下午6:29:31
  * Description: //模块目的、功能描述      
@@ -48,14 +48,14 @@ import com.nixian.http.client.codecs.CachebleFactory;
  */
 public class HttpClients {
     
-    private static CloseableHttpAsyncClient customerHttpClient;
+    private static CloseableHttpAsyncClient bestHttpClient;
     
     private final static AtomicReference status = new AtomicReference(Status.NULL);
     
     public static void shutdown() throws IOException {
         if(status.compareAndSet(Status.ACTIVE, Status.STOPPED))
         {
-            customerHttpClient.close();
+            bestHttpClient.close();
         }
     }
     
@@ -63,17 +63,17 @@ public class HttpClients {
         if(status.get()==Status.INACTIVE) {
             synchronized (HttpClients.class) {
                 if(status.get()==Status.ACTIVE)
-                    return customerHttpClient;
+                    return bestHttpClient;
             }
         }else if(status.get()==Status.ACTIVE)
-            return customerHttpClient;
-               throw new IllegalStateException("可能尚未创建HTTP-CLIENT,优先调用方法getPoolClient(int timeout, long idleTime, boolean tcpNoDelay)");
+            return bestHttpClient;
+        throw new IllegalStateException("可能尚未创建HTTP-CLIENT,优先调用方法getPoolClient(int timeout, long idleTime, boolean tcpNoDelay)");
     }
     
     public static CloseableHttpAsyncClient getPoolClient(int timeout, long idleTime, boolean tcpNoDelay)
     {
         
-        if (null == customerHttpClient) {
+        if (null == bestHttpClient) {
             synchronized (HttpClients.class) {
                 if(status.compareAndSet(Status.NULL, Status.INACTIVE)) {
                     ConnectionConfig defaultConfig = null; 
@@ -91,15 +91,15 @@ public class HttpClients {
     //                };
     
                     RequestConfig requestConfig = RequestConfig.custom()
-                           .setConnectTimeout(500000)
-                           .setSocketTimeout(500000)
+                           .setConnectTimeout(timeout)
+                           .setSocketTimeout(timeout)
                            .setConnectionRequestTimeout(1000)
                            .setStaleConnectionCheckEnabled(true)
                            .build();
         
                         //配置io线程
                     IOReactorConfig ioReactorConfig = IOReactorConfig.custom().
-                            setIoThreadCount(Runtime.getRuntime().availableProcessors()*4)
+                            setIoThreadCount(Runtime.getRuntime().availableProcessors()*3)
                             .setSoKeepAlive(true)
                             .setSelectInterval(5000)
                             .setTcpNoDelay(tcpNoDelay)
@@ -124,13 +124,13 @@ public class HttpClients {
                             .build();
         
                     client.start();
-                    customerHttpClient = client;
+                    bestHttpClient = client;
                     status.compareAndSet(Status.INACTIVE, Status.ACTIVE);
                 }
             }
         }
         
-        return customerHttpClient;
+        return getClient();
     }
     
     static enum Status {NULL,INACTIVE, ACTIVE, STOPPED}
@@ -238,7 +238,7 @@ public class HttpClients {
     }
     
     private CloseableHttpAsyncClient demo() {
-        if (null == customerHttpClient) {
+        if (null == bestHttpClient) {
             
             synchronized (HttpClients.class) {
 
@@ -295,10 +295,10 @@ public class HttpClients {
                 //start
                 client.start();
     
-                customerHttpClient = client;
+                bestHttpClient = client;
 
            }
          }
-              return customerHttpClient;
+              return bestHttpClient;
        }
 }
